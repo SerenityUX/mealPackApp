@@ -70,7 +70,7 @@ export default function HomeScreen({ navigation }) {
       })
       .catch((error) => {
         console.error('Error fetching data:', error);
-        navigation.navigate("Welcome")
+        navigation.navigate("SetupStack")
       });
   }
 
@@ -83,7 +83,8 @@ export default function HomeScreen({ navigation }) {
           console.log(storedToken)
           getSelf(storedToken);
         } else {
-          navigation.navigate("Login")
+          
+          navigation.navigate("SetupStack")
         }
       }
   
@@ -130,7 +131,7 @@ export default function HomeScreen({ navigation }) {
               onPress={() => {
                 deleteToken().then(() => {
                   setSelf({})
-                  navigation.navigate('Login')
+                  navigation.navigate('SetupStack')
                 })}}
       >
       <CachedImage
@@ -144,11 +145,11 @@ export default function HomeScreen({ navigation }) {
       </View>
         </View>
         {recipes.length == 0 &&
-        <Text style={{fontSize: 18, marginLeft: 16}}>You have no recipes... go make some!</Text>
+        <Text style={{fontSize: 18, marginLeft: 16}}>You have no recipes... go discover some!</Text>
         }
         <FlatList
 
-        style={{width: width - 32, paddingTop: 8, marginLeft: 16, marginRight: 16}}
+        style={{width: width, paddingTop: 8, paddingLeft: 16, paddingRight: 16}}
           data={recipes}
           renderItem={({ index, item }) => (
             <TouchableOpacity
@@ -224,12 +225,12 @@ export default function HomeScreen({ navigation }) {
             </View>
             <LinearGradient
               colors={[
-                'rgba(0, 0, 0, 0.90)',
+                'rgba(0, 0, 0, 0.45)',
                 
-                'rgba(0, 0, 0, 0.45)',
+                'rgba(0, 0, 0, 0.30)',
                 'rgba(0, 0, 0, 0.00)',
+                'rgba(0, 0, 0, 0.30)',
                 'rgba(0, 0, 0, 0.45)',
-                'rgba(0, 0, 0, 0.90)',
               ]}
               locations={[0, 0.1615, 0.4948, 0.8073, 1]}
               style={{

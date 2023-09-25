@@ -7,29 +7,29 @@ import CachedImage from '../components/cachedImage'
 
 
 
-export default function RecipeScreen({ navigation, route }) {
+export default function RecipePreviewScreen({ navigation, route }) {
 
-    const [message, setMessage] = useState('Share');
+    const [message, setMessage] = useState('Add To Meal Pack');
     const headerHeight = useHeaderHeight();
 
     const { recipe, token } = route.params;
     const [recipientEmail, setRecipientEmail] = useState('');
     const [showShareMenu, setShowShareMenu] = useState(false);
-    async function share() {
-      setMessage("Sharing")
+
+    async function add() {
+      setMessage("Adding To Meal Pack...")
         // Create a new FormData object
         const formData = new FormData();
-        formData.append('recipeSent', recipe.id); 
-        formData.append('recipientEmail', recipientEmail.toLocaleLowerCase()); 
+        formData.append('recipe', recipe.id); 
         formData.append('token', token); 
         // console.log(formData)
-        fetch("https://meal-pack-api-serenityux.vercel.app/share", {
+        fetch("https://meal-pack-api-serenityux.vercel.app/add", {
           method: 'POST',
           body: formData, // Use the FormData object as the request body
         })
           .then((response) => {
             if (response.ok) {
-              setMessage("Sent")
+              setMessage("Added To Meal Pack")
                 return response.json()
               
             } else {
@@ -47,66 +47,32 @@ export default function RecipeScreen({ navigation, route }) {
             console.error('Error sharing:', error);
           });
       }
-    useEffect(() => {
-      // Add navigation options dynamically
-      navigation.setOptions({
-        headerRight: () => (
-          <TouchableOpacity
-            onPress={() => setShowShareMenu(true)}
-          >
-            <Image width={42} height={42} source={{uri: "https://cloud-omft3jsbn-hack-club-bot.vercel.app/0gift.png"}} />
-          </TouchableOpacity>
-        ),
-      });
-    }, [navigation]);
+    // useEffect(() => {
+    //   // Add navigation options dynamically
+    //   navigation.setOptions({
+    //     headerRight: () => (
+    //       <TouchableOpacity
+    //         onPress={() => setShowShareMenu(true)}
+    //       >
+    //         <Image width={42} height={42} source={{uri: "https://cloud-omft3jsbn-hack-club-bot.vercel.app/0gift.png"}} />
+    //       </TouchableOpacity>
+    //     ),
+    //   });
+    // }, [navigation]);
 
     return (
       <>
-          <View
-          style={{position: "absolute", width: 260, zIndex: 1, backgroundColor: "#fff", padding: 16, borderRadius: 16,  top: headerHeight + 16, right: 16, display: showShareMenu ? ("display") : ("none")}}
-        
-      >
-        {/* Your share menu content here */}
-        <View style={{display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "space-between"}}>
-          
-        <Text style={{fontSize: 16}}>Gift Your Recipe</Text>
-        <TouchableOpacity
-          onPress={() => setShowShareMenu(false)}
-        >
-          <Text
-          >Close</Text>
-        </TouchableOpacity>
-        </View>
-        <Text style={{fontWeight: 500, fontSize: 16, marginBottom: 8, marginTop: 16}}>Email Address</Text>
-            <TextInput
-          placeholder='marsha@mellow.app'
-          style={{
-                width: 200,
-                width: "100%",
-                fontSize: 16,
-                paddingHorizontal: 12,
-                paddingVertical: 12,
-                borderRadius: 12,
-                borderColor: '#ABABAB',
-                borderWidth: 1,
-                }}
-                onChangeText={(text) => setRecipientEmail(text)}
-                value={recipientEmail}
-                autoComplete={"email"}
-                inputMode={"email"}
-                textContentType={"emailAddress"}
-                keyboardType={"email-address"}
-                spellCheck={false}
-            />
-            <TouchableOpacity
-            onPress={() => share()}
-            >
-            <Text style={{fontSize: 18, width: "100%", textAlign: "center", color: "#fff", borderRadius: 16, overflow: "hidden", backgroundColor: "#C6512C", padding: 12, marginTop: 16}}>
-        {message}
 
-      </Text>
+      
+            <TouchableOpacity 
+            onPress={() => add()}
+            style={{position: "absolute", width: "100%", display: "flex", flex: 1, bottom: 32, zIndex: 5}}>
+
+            <Text style={{fontSize: 18, textAlign: "center", marginLeft: 16, marginRight: 16, color: "#fff", borderRadius: 16, overflow: "hidden", backgroundColor: "#C6512C", padding: 16}}>
+
+          {message}</Text>
+        
       </TouchableOpacity>
-      </View>
         <ScrollView style={{backgroundColor: "#fff"}}>
           
 
@@ -126,7 +92,7 @@ export default function RecipeScreen({ navigation, route }) {
                 <Text style={{fontSize: 18,  marginBottom: 12}} key={ingredient}>• {ingredient}</Text>
             )}
             </View>
-            <View style={{marginBottom: 32}}>
+            <View style={{marginBottom: 72}}>
             <Text style={{fontSize: 24, marginBottom: 16, fontWeight: 500}}>Directions</Text>
 
             {recipe?.directions?.map((direction, i) => 

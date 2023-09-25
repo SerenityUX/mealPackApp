@@ -3,6 +3,9 @@ import { View, Text, Dimensions, Image, ScrollView, StyleSheet, TouchableOpacity
 import { Camera } from 'expo-camera';
 import { useHeaderHeight } from '@react-navigation/elements';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view'
+import * as SecureStore from 'expo-secure-store';
+import * as ImagePicker from 'expo-image-picker';
+import * as Permissions from 'expo-permissions';
 
 export default function CreateRecipeScreen({ navigation, route }) {
     const headerHeight = useHeaderHeight();
@@ -10,59 +13,7 @@ export default function CreateRecipeScreen({ navigation, route }) {
     const [width, setWidth] = useState('');
 
 
-    async function retrieveToken() {
-      try {
-        const token = await SecureStore.getItemAsync('authToken');
-        if (token) {
-          console.log('Token retrieved securely:', token);
-           return token;
-        } else {
-          console.log('No token found.');
-          return null;
-        }
-      } catch (error) {
-        console.error('Error retrieving token:', error);
-         return null;
-      }
-    }
-    
-  
-    async function deleteToken() {
-      try {
-        await SecureStore.deleteItemAsync('authToken');
-        console.log('Token deleted.');
-      } catch (error) {
-        console.error('Error deleting token:', error);
-      }
-    }
-    
-    async function getSelf(token) {
-      const formData = new FormData();
-      formData.append('token', token); // Use the email state
-    
-      fetch("https://meal-pack-api-serenityux.vercel.app/auth", {
-        method: 'POST',
-        body: formData, // Use the FormData object as the request body
-      })
-        .then((response) => {
-          if (response.ok) {
-            return response.json(); // Parse the JSON response
-            
-          } else {
-            throw new Error('Network response was not ok');
-          }
-        })
-        .then((data) => {
-          console.log(data); // Log the data for debugging
-          setSelf(data)
-          setRecipes(data.recipes)
-          
-        })
-        .catch((error) => {
-          console.error('Error fetching data:', error);
-          navigation.navigate("Welcome")
-        });
-    }
+
 
     const newIngredientRef = useRef(null);
     useEffect(() => {
@@ -92,6 +43,9 @@ export default function CreateRecipeScreen({ navigation, route }) {
   
     const [ingredients, setIngredients] = useState([]);
     const [newIngredient, setNewIngredient] = useState('');
+
+    const [privateRecipe, setPrivateRecipe] = useState(false);
+
 
     const [newDirection, setNewDirection] = useState('');
     const [autoFocusNewIngredient, setAutoFocusNewIngredient] = useState(false);
@@ -162,10 +116,14 @@ export default function CreateRecipeScreen({ navigation, route }) {
         setMessage("Loading")
         // Create a new FormData object
         const formData = new FormData();
-        formData.append('token', token); 
+        const authToken = await SecureStore.getItemAsync('authToken');
+
+        formData.append('token', authToken); 
         formData.append('name', name); 
         formData.append('thumbnail', thumbnail); 
         formData.append('description', description); 
+        formData.append('privacy', privateRecipe); 
+
         if(newIngredient != "") {
           formData.append('ingredients', JSON.stringify(newIngredientsSubmission)); 
 
@@ -302,6 +260,63 @@ export default function CreateRecipeScreen({ navigation, route }) {
             }
           };
       
+          const pickImageFromCameraRoll = async () => {
+            const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+          
+            if (status !== 'granted') {
+              alert('Sorry, we need camera roll permissions to make this work!');
+              return;
+            }
+          
+            const result = await ImagePicker.launchImageLibraryAsync({
+              mediaTypes: ImagePicker.MediaTypeOptions.Images,
+              allowsEditing: true,
+              aspect: [4, 3],
+              quality: 1,
+            });
+          
+            if (!result.canceled && result.assets && result.assets[0]) {
+              handleImage(result.assets[0].uri);
+            }
+          };
+          
+          
+          const handleImage = async (uri) => {
+            setImage(uri);
+            setImageStatus("Loading");
+            
+            convertImageToBase64(uri)
+              .then(base64String => {
+                if (base64String) {
+                  const formDataImage = new FormData();
+                  formDataImage.append('image', base64String);
+          
+                  fetch(apiUrl, {
+                    method: 'POST',
+                    body: formDataImage,
+                  })
+                    .then(response => {
+                      if (response.ok) {
+                        return response.json();
+                      } else {
+                        return response.json();
+                      }
+                    })
+                    .then(data => {
+                      console.log(data.data.url)
+                      setThumbnail(data.data.url);
+                      setImageStatus("Complete");
+                    })
+                    .catch(error => {
+                      console.error('Error:', error);
+                    });
+                } else {
+                  console.log('Image conversion failed.');
+                }
+              });
+          };
+          
+
        if (hasCameraPermission === false) {
           return <Text>No access to camera</Text>;
         }
@@ -342,6 +357,22 @@ export default function CreateRecipeScreen({ navigation, route }) {
      position: "absolute",
      bottom: 24,
      left: 16,
+     width: 48,
+     height: 48
+   }}
+   />
+   </TouchableOpacity>
+   <TouchableOpacity
+               onPress={() => {
+                 pickImageFromCameraRoll()
+               }}
+   >
+   <Image 
+   source={{uri: "https://cloud-brltxxalt-hack-club-bot.vercel.app/0upload.png"}}
+   style={{
+     position: "absolute",
+     bottom: 24,
+     right: 16,
      width: 48,
      height: 48
    }}
@@ -498,7 +529,25 @@ export default function CreateRecipeScreen({ navigation, route }) {
         placeholder="+ New Direction"
         onSubmitEditing={handleAddDirection} // Call handleAddIngredient on Enter
       />
+
+
     <View style={{marginBottom: 64}}>
+
+    <View style={{display: "flex", marginTop: 24, flexDirection: "row", alignItems: "center"}}>
+      <TouchableOpacity
+      onPress={() =>
+        {if(privateRecipe) {
+          setPrivateRecipe(false)
+        } else {
+          setPrivateRecipe(true)
+        }}
+      }
+      style={{width: 42, height: 42, backgroundColor: privateRecipe ? ("#E5E5E5") : ("#C6512C"), borderRadius: 12}}>
+
+      </TouchableOpacity>
+      <Text style={{fontSize: 16, marginLeft: 12, opacity: !privateRecipe ? 1 : 0.3}}>Share Recipe On Discover Page</Text>
+    </View>
+
     <TouchableOpacity 
     disabled={thumbnail == "" || name == "" || description == "" || (ingredients.length == 0 && newIngredient == "") || (directions.length == 0 && newDirection == "")}
     style={{marginTop: 24, opacity: thumbnail == "" || name == "" || description == "" || (ingredients.length == 0 && newIngredient == "") || (directions.length == 0 && newDirection == "")}}

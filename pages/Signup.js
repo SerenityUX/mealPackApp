@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { View, TouchableOpacity, StyleSheet, Text, Image, Button, TextInput } from 'react-native';
+import { View, Dimensions, TouchableOpacity, StyleSheet, Text, Image, Button, TextInput } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 import { Camera } from 'expo-camera';
 import { useHeaderHeight } from '@react-navigation/elements';
@@ -9,6 +9,16 @@ import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view
 export default function SignupScreen({ navigation }) {
   const headerHeight = useHeaderHeight();
   const nameRef = useRef(null);
+
+  const [height, setHeight] = useState('');
+  const [width, setWidth] = useState('');
+
+  useEffect(() => {
+    //handler to get device Height
+    setHeight(Dimensions.get('window').height);
+    //handler to get device Width
+    setWidth(Dimensions.get('window').width);
+  }, []);
 
   const emailRef = useRef(null);
   const passwordRef = useRef(null);
@@ -199,10 +209,12 @@ async function convertImageToBase64(uri) {
             
     return (
       <KeyboardAwareScrollView style={{backgroundColor: "#fff"}}>
+
       <View style={{ flex: 1, marginTop: headerHeight, height: "100%", backgroundColor: "#fff", }}>
 
 
         <View style={{ aspectRatio: 1, display: "flex", alignItems: "center"}}>
+        
         <TouchableOpacity
    onLongPress={ () =>  
     {
@@ -219,6 +231,23 @@ async function convertImageToBase64(uri) {
    >
 
    <View style={styles.cameraContainer}>
+   <TouchableOpacity
+               onPress={() => {
+                 pickImageFromCameraRoll()
+               }}
+               style={{zIndex: 5}}
+   >
+   <Image 
+   source={{uri: "https://cloud-brltxxalt-hack-club-bot.vercel.app/0upload.png"}}
+   style={{
+     position: "absolute",
+     bottom: 24,
+     left: (width/2) - 36,
+     width: 48,
+     height: 48
+   }}
+   />
+   </TouchableOpacity>
     {!image ?
        (
        <Camera 
